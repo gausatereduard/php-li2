@@ -30,6 +30,7 @@ class TransactionController extends BaseController {
             if (empty($data['date']) || !strtotime($data['date'])) $errors['date'] = 'Valid date required';
             
             if (empty($errors)) {
+                $data['target_wallet_id'] = $data['target_wallet_id'] ?: null;
                 $transactionModel = new Transaction();
                 $result = $transactionModel->create($data);
                 if ($result) $this->redirect('/transactions');
@@ -73,6 +74,7 @@ class TransactionController extends BaseController {
             if (empty($data['date']) || !strtotime($data['date'])) $errors['date'] = 'Valid date required';
             
             if (empty($errors)) {
+                $data['target_wallet_id'] = $data['target_wallet_id'] ?: null;
                 $result = $transactionModel->update($id, $data, $_SESSION['user_id']);
                 if ($result) $this->redirect('/transactions');
                 else $errors['general'] = 'Failed to update transaction';

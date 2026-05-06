@@ -41,6 +41,9 @@ $router->add('POST', 'login', function() {
     (new AuthController())->login();
 });
 
+$router->add('GET', 'logout', function() {
+    (new AuthController())->logout();
+});
 $router->add('POST', 'logout', function() {
     (new AuthController())->logout();
 });

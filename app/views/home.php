@@ -9,19 +9,6 @@
 </div>
 
 <section>
-    <h3>Latest Registered Users</h3>
-    <ul>
-        <?php if (empty($latestUsers)): ?>
-            <li class="empty-state">No users yet</li>
-        <?php else: ?>
-            <?php foreach ($latestUsers as $user): ?>
-                <li><?= esc($user['username']) ?> <span class="badge badge-info"><?= date('M d, Y', strtotime($user['created_at'])) ?></span></li>
-            <?php endforeach; ?>
-        <?php endif; ?>
-    </ul>
-</section>
-
-<section>
     <h3>Public Categories</h3>
     <ul>
         <?php if (empty($latestCategories)): ?>
@@ -29,6 +16,26 @@
         <?php else: ?>
             <?php foreach ($latestCategories as $cat): ?>
                 <li><?= esc($cat['name']) ?> <span class="badge <?= $cat['type'] === 'income' ? 'badge-success' : 'badge-danger' ?>"><?= esc($cat['type']) ?></span></li>
+            <?php endforeach; ?>
+        <?php endif; ?>
+    </ul>
+</section>
+
+<section>
+    <h3>Latest Transactions</h3>
+    <ul>
+        <?php if (empty($latestTransactions)): ?>
+            <li class="empty-state">No transactions yet</li>
+        <?php else: ?>
+            <?php foreach ($latestTransactions as $t): ?>
+                <li>
+                    <?= esc($t['description'] ?: $t['category_name']) ?> 
+                    <span class="badge <?= $t['type'] === 'income' ? 'badge-success' : ($t['type'] === 'expense' ? 'badge-danger' : 'badge-info') ?>">
+                        <?= esc($t['type']) ?>
+                    </span>
+                    $<?= number_format($t['amount'], 2) ?>
+                    <small style="color: var(--text-muted);"><?= esc($t['wallet_name']) ?></small>
+                </li>
             <?php endforeach; ?>
         <?php endif; ?>
     </ul>

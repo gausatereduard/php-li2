@@ -12,7 +12,7 @@
         <form method="POST">
             <input type="hidden" name="csrf_token" value="<?= generateCsrfToken() ?>">
             <div class="form-group">
-                <label for="email">Email or Username</label>
+                <label for="email">Email</label>
                 <input type="text" id="email" name="email" value="<?= esc($data['email'] ?? '') ?>" required>
             </div>
             <div class="form-group">

@@ -6,6 +6,22 @@ class Transaction {
     private function getPDO() {
         return getPDO();
     }
+
+    public function getLatest($limit = 5) {
+        $pdo = $this->getPDO();
+        $stmt = $pdo->prepare("
+            SELECT t.*, c.name as category_name, w.name as wallet_name,
+                   tw.name as target_wallet_name
+            FROM transactions t
+            JOIN categories c ON t.category_id = c.id
+            JOIN wallets w ON t.wallet_id = w.id
+            LEFT JOIN wallets tw ON t.target_wallet_id = tw.id
+            ORDER BY t.date DESC, t.id DESC
+            LIMIT ?
+        ");
+        $stmt->execute([$limit]);
+        return $stmt->fetchAll();
+    }
     
     public function create($data) {
         $pdo = $this->getPDO();
