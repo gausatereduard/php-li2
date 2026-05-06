@@ -8,19 +8,24 @@
 </head>
 <body>
     <nav>
-        <a href="/">Home</a>
-        <?php if (isset($_SESSION['user_id'])): ?>
-            <a href="/wallets">Wallets</a>
-            <a href="/transactions">Transactions</a>
-            <a href="/budget">Budget</a>
-            <?php if ($_SESSION['role'] === 'admin'): ?>
-                <a href="/admin">Admin</a>
-            <?php endif; ?>
-            <a href="/logout">Logout</a>
-        <?php else: ?>
-            <a href="/login">Login</a>
-            <a href="/register">Register</a>
-        <?php endif; ?>
+        <div class="nav-content">
+            <a href="/" class="logo">Finance Manager</a>
+            <div class="nav-links">
+                <?php if (isset($_SESSION['user_id'])): ?>
+                    <a href="/">Home</a>
+                    <a href="/wallets">Wallets</a>
+                    <a href="/transactions">Transactions</a>
+                    <a href="/budget">Budget</a>
+                    <?php if ($_SESSION['role'] === 'admin'): ?>
+                        <a href="/admin">Admin</a>
+                    <?php endif; ?>
+                    <a href="/logout" class="btn">Logout</a>
+                <?php else: ?>
+                    <a href="/login">Login</a>
+                    <a href="/register" class="btn">Get Started</a>
+                <?php endif; ?>
+            </div>
+        </div>
     </nav>
     <main>
         <?= $content ?>

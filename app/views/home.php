@@ -1,23 +1,36 @@
 <?php $title = 'Home'; ?>
 <?php ob_start(); ?>
-<h1>Finance Manager</h1>
-<p>Track your personal finances easily.</p>
+<div class="hero">
+    <h1>Finance Manager</h1>
+    <p>Track your personal finances easily. Manage wallets, transactions, and budgets all in one place.</p>
+    <?php if (!isset($_SESSION['user_id'])): ?>
+        <a href="/register" class="btn">Get Started</a>
+    <?php endif; ?>
+</div>
 
 <section>
-    <h2>Latest Registered Users</h2>
+    <h3>Latest Registered Users</h3>
     <ul>
-        <?php foreach ($latestUsers as $user): ?>
-            <li><?= esc($user['username']) ?> (joined <?= date('Y-m-d', strtotime($user['created_at'])) ?>)</li>
-        <?php endforeach; ?>
+        <?php if (empty($latestUsers)): ?>
+            <li class="empty-state">No users yet</li>
+        <?php else: ?>
+            <?php foreach ($latestUsers as $user): ?>
+                <li><?= esc($user['username']) ?> <span class="badge badge-info"><?= date('M d, Y', strtotime($user['created_at'])) ?></span></li>
+            <?php endforeach; ?>
+        <?php endif; ?>
     </ul>
 </section>
 
 <section>
-    <h2>Public Categories</h2>
+    <h3>Public Categories</h3>
     <ul>
-        <?php foreach ($latestCategories as $cat): ?>
-            <li><?= esc($cat['name']) ?> (<?= esc($cat['type']) ?>)</li>
-        <?php endforeach; ?>
+        <?php if (empty($latestCategories)): ?>
+            <li class="empty-state">No categories yet</li>
+        <?php else: ?>
+            <?php foreach ($latestCategories as $cat): ?>
+                <li><?= esc($cat['name']) ?> <span class="badge <?= $cat['type'] === 'income' ? 'badge-success' : 'badge-danger' ?>"><?= esc($cat['type']) ?></span></li>
+            <?php endforeach; ?>
+        <?php endif; ?>
     </ul>
 </section>
 <?php $content = ob_get_clean(); ?>

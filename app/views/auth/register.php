@@ -1,29 +1,49 @@
 <?php $title = 'Register'; ?>
 <?php ob_start(); ?>
-<h2>Register</h2>
-<form method="POST">
-    <input type="hidden" name="csrf_token" value="<?= generateCsrfToken() ?>">
-    <div>
-        <label>Username</label>
-        <input type="text" name="username" value="<?= esc($data['username'] ?? '') ?>">
-        <?= isset($errors['username']) ? '<span>' . esc($errors['username']) . '</span>' : '' ?>
+<div class="auth-container">
+    <div class="auth-card">
+        <h2>Create Account</h2>
+        <p>Start tracking your finances today</p>
+        
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="<?= generateCsrfToken() ?>">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" value="<?= esc($data['username'] ?? '') ?>" required>
+                <?php if (isset($errors['username'])): ?>
+                    <span style="color: var(--danger); font-size: 0.875rem;"><?= esc($errors['username']) ?></span>
+                <?php endif; ?>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" value="<?= esc($data['email'] ?? '') ?>" required>
+                <?php if (isset($errors['email'])): ?>
+                    <span style="color: var(--danger); font-size: 0.875rem;"><?= esc($errors['email']) ?></span>
+                <?php endif; ?>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+                <?php if (isset($errors['password'])): ?>
+                    <span style="color: var(--danger); font-size: 0.875rem;"><?= esc($errors['password']) ?></span>
+                <?php endif; ?>
+            </div>
+            <div class="form-group">
+                <label for="confirm_password">Confirm Password</label>
+                <input type="password" id="confirm_password" name="confirm_password" required>
+                <?php if (isset($errors['confirm_password'])): ?>
+                    <span style="color: var(--danger); font-size: 0.875rem;"><?= esc($errors['confirm_password']) ?></span>
+                <?php endif; ?>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Create Account</button>
+            </div>
+        </form>
+        
+        <p style="text-align: center; margin-top: 20px; margin-bottom: 0;">
+            Already have an account? <a href="/login">Login</a>
+        </p>
     </div>
-    <div>
-        <label>Email</label>
-        <input type="email" name="email" value="<?= esc($data['email'] ?? '') ?>">
-        <?= isset($errors['email']) ? '<span>' . esc($errors['email']) . '</span>' : '' ?>
-    </div>
-    <div>
-        <label>Password</label>
-        <input type="password" name="password">
-        <?= isset($errors['password']) ? '<span>' . esc($errors['password']) . '</span>' : '' ?>
-    </div>
-    <div>
-        <label>Confirm Password</label>
-        <input type="password" name="confirm_password">
-        <?= isset($errors['confirm_password']) ? '<span>' . esc($errors['confirm_password']) . '</span>' : '' ?>
-    </div>
-    <button type="submit">Register</button>
-</form>
+</div>
 <?php $content = ob_get_clean(); ?>
 <?php require 'layout.php'; ?>
