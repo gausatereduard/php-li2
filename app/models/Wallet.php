@@ -40,4 +40,12 @@ class Wallet {
         $stmt->execute([$id, $userId]);
         return $stmt->fetch();
     }
+    
+    public function getTotalBalance($userId) {
+        $pdo = $this->getPDO();
+        $stmt = $pdo->prepare("SELECT COALESCE(SUM(balance), 0) as total FROM wallets WHERE user_id = ?");
+        $stmt->execute([$userId]);
+        $result = $stmt->fetch();
+        return $result['total'] ?? 0;
+    }
 }

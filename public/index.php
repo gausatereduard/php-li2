@@ -14,6 +14,7 @@ require_once __DIR__ . '/../app/controllers/CategoryController.php';
 require_once __DIR__ . '/../app/models/Transaction.php';
 require_once __DIR__ . '/../app/controllers/TransactionController.php';
 require_once __DIR__ . '/../app/models/Budget.php';
+require_once __DIR__ . '/../app/models/ExchangeRate.php';
 require_once __DIR__ . '/../app/controllers/BudgetController.php';
 require_once __DIR__ . '/../app/controllers/AdminController.php';
 
