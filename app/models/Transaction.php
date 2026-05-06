@@ -1,40 +1,35 @@
 <?php
 
-class Transaction extends BaseModel {
-    /**
-     * Create transaction and update wallet balances
-     * @param array $data
-     * @return int|false
-     */
+require_once __DIR__ . '/../../config/database.php';
+
+class Transaction {
+    private function getPDO() {
+        return getPDO();
+    }
+    
     public function create($data) {
-        $this->pdo->beginTransaction();
+        $pdo = $this->getPDO();
+        $pdo->beginTransaction();
         try {
-            $stmt = $this->pdo->prepare("INSERT INTO transactions (amount, type, category_id, wallet_id, target_wallet_id, description, date) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmt = $pdo->prepare("INSERT INTO transactions (amount, type, category_id, wallet_id, target_wallet_id, description, date) VALUES (?, ?, ?, ?, ?, ?, ?)");
             $stmt->execute([
                 $data['amount'], $data['type'], $data['category_id'], $data['wallet_id'],
                 $data['target_wallet_id'] ?? null, $data['description'], $data['date']
             ]);
-            $transactionId = $this->pdo->lastInsertId();
+            $transactionId = $pdo->lastInsertId('transactions_id_seq');
             
-            $this->applyTransaction($data);
+            $this->applyTransaction($data, $pdo);
             
-            $this->pdo->commit();
+            $pdo->commit();
             return $transactionId;
         } catch (Exception $e) {
-            $this->pdo->rollBack();
+            $pdo->rollBack();
             return false;
         }
     }
     
-    /**
-     * Get transactions for user with filters
-     * @param int $userId
-     * @param array $filters
-     * @param int $page
-     * @param int $perPage
-     * @return array
-     */
     public function search($userId, $filters = [], $page = 1, $perPage = 10) {
+        $pdo = $this->getPDO();
         $where = ["w.user_id = ?"];
         $params = [$userId];
         
@@ -79,7 +74,7 @@ class Transaction extends BaseModel {
             default => 't.date DESC'
         };
         
-        $offset = ($page - 1) * $perPage;
+        $offset = ($page -1) * $perPage;
         
         $sql = "SELECT t.*, c.name as category_name, w.name as wallet_name 
                 FROM transactions t 
@@ -92,18 +87,14 @@ class Transaction extends BaseModel {
         $params[] = $perPage;
         $params[] = $offset;
         
-        $stmt = $this->pdo->prepare($sql);
+        $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll();
     }
     
-    /**
-     * Get all transactions for user
-     * @param int $userId
-     * @return array
-     */
     public function getByUser($userId) {
-        $stmt = $this->pdo->prepare("
+        $pdo = $this->getPDO();
+        $stmt = $pdo->prepare("
             SELECT t.*, c.name as category_name, w.name as wallet_name 
             FROM transactions t 
             JOIN wallets w ON t.wallet_id = w.id 
@@ -115,14 +106,9 @@ class Transaction extends BaseModel {
         return $stmt->fetchAll();
     }
     
-    /**
-     * Get transaction by id for user
-     * @param int $id
-     * @param int $userId
-     * @return array|false
-     */
     public function getById($id, $userId) {
-        $stmt = $this->pdo->prepare("
+        $pdo = $this->getPDO();
+        $stmt = $pdo->prepare("
             SELECT t.* FROM transactions t 
             JOIN wallets w ON t.wallet_id = w.id 
             WHERE t.id = ? AND w.user_id = ?
@@ -131,88 +117,75 @@ class Transaction extends BaseModel {
         return $stmt->fetch();
     }
     
-    /**
-     * Update transaction
-     * @param int $id
-     * @param array $data
-     * @param int $userId
-     * @return bool
-     */
     public function update($id, $data, $userId) {
-        $this->pdo->beginTransaction();
+        $pdo = $this->getPDO();
+        $pdo->beginTransaction();
         try {
             $old = $this->getById($id, $userId);
             if (!$old) return false;
             
-            // Reverse old transaction
-            $this->reverseTransaction($old);
+            $this->reverseTransaction($old, $pdo);
             
-            // Apply new transaction
-            $stmt = $this->pdo->prepare("UPDATE transactions SET amount = ?, type = ?, category_id = ?, wallet_id = ?, target_wallet_id = ?, description = ?, date = ? WHERE id = ?");
+            $stmt = $pdo->prepare("UPDATE transactions SET amount = ?, type = ?, category_id = ?, wallet_id = ?, target_wallet_id = ?, description = ?, date = ? WHERE id = ?");
             $stmt->execute([
                 $data['amount'], $data['type'], $data['category_id'], $data['wallet_id'],
                 $data['target_wallet_id'] ?? null, $data['description'], $data['date'], $id
             ]);
             
-            $this->applyTransaction($data);
+            $this->applyTransaction($data, $pdo);
             
-            $this->pdo->commit();
+            $pdo->commit();
             return true;
         } catch (Exception $e) {
-            $this->pdo->rollBack();
+            $pdo->rollBack();
             return false;
         }
     }
     
-    /**
-     * Delete transaction
-     * @param int $id
-     * @param int $userId
-     * @return bool
-     */
     public function delete($id, $userId) {
-        $this->pdo->beginTransaction();
+        $pdo = $this->getPDO();
+        $pdo->beginTransaction();
         try {
             $old = $this->getById($id, $userId);
             if (!$old) return false;
             
-            $this->reverseTransaction($old);
+            $this->reverseTransaction($old, $pdo);
             
-            $stmt = $this->pdo->prepare("DELETE FROM transactions WHERE id = ?");
+            $stmt = $pdo->prepare("DELETE FROM transactions WHERE id = ?");
             $stmt->execute([$id]);
             
-            $this->pdo->commit();
+            $pdo->commit();
             return true;
         } catch (Exception $e) {
-            $this->pdo->rollBack();
+            $pdo->rollBack();
             return false;
         }
     }
     
-    private function applyTransaction($data) {
+    private function applyTransaction($data, $pdo) {
         if ($data['type'] === 'income') {
-            $this->updateWalletBalance($data['wallet_id'], $data['amount'], '+');
+            $this->updateWalletBalance($data['wallet_id'], $data['amount'], '+', $pdo);
         } elseif ($data['type'] === 'expense') {
-            $this->updateWalletBalance($data['wallet_id'], $data['amount'], '-');
+            $this->updateWalletBalance($data['wallet_id'], $data['amount'], '-', $pdo);
         } elseif ($data['type'] === 'transfer') {
-            $this->updateWalletBalance($data['wallet_id'], $data['amount'], '-');
-            $this->updateWalletBalance($data['target_wallet_id'], $data['amount'], '+');
+            $this->updateWalletBalance($data['wallet_id'], $data['amount'], '-', $pdo);
+            $this->updateWalletBalance($data['target_wallet_id'], $data['amount'], '+', $pdo);
         }
     }
     
-    private function reverseTransaction($data) {
+    private function reverseTransaction($data, $pdo) {
         if ($data['type'] === 'income') {
-            $this->updateWalletBalance($data['wallet_id'], $data['amount'], '-');
+            $this->updateWalletBalance($data['wallet_id'], $data['amount'], '-', $pdo);
         } elseif ($data['type'] === 'expense') {
-            $this->updateWalletBalance($data['wallet_id'], $data['amount'], '+');
+            $this->updateWalletBalance($data['wallet_id'], $data['amount'], '+', $pdo);
         } elseif ($data['type'] === 'transfer') {
-            $this->updateWalletBalance($data['wallet_id'], $data['amount'], '+');
-            $this->updateWalletBalance($data['target_wallet_id'], $data['amount'], '-');
+            $this->updateWalletBalance($data['wallet_id'], $data['amount'], '+', $pdo);
+            $this->updateWalletBalance($data['target_wallet_id'], $data['amount'], '-', $pdo);
         }
     }
     
-    private function updateWalletBalance($walletId, $amount, $operation) {
-        $stmt = $this->pdo->prepare("UPDATE wallets SET balance = balance $operation ? WHERE id = ?");
+    private function updateWalletBalance($walletId, $amount, $operation, $pdo) {
+        $stmt = $pdo->prepare("UPDATE wallets SET balance = balance $operation ? WHERE id = ?");
         $stmt->execute([$amount, $walletId]);
     }
 }

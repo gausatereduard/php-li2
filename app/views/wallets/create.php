@@ -29,4 +29,4 @@
     </div>
 </section>
 <?php $content = ob_get_clean(); ?>
-<?php require 'layout.php'; ?>
+<?php require __DIR__ . '/../layout.php'; ?>

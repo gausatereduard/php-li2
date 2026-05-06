@@ -1,9 +1,6 @@
 <?php
 
 function getPDO() {
-    static $pdo;
-    if ($pdo) return $pdo;
-    
     $host = 'db';
     $port = '5432';
     $dbname = 'finance_db';

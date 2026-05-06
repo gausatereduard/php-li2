@@ -1,25 +1,19 @@
 <?php
 
 class TransactionController extends BaseController {
-    private $transactionModel;
-    private $categoryModel;
-    private $walletModel;
-    
-    public function __construct() {
-        if (!$this->isAuthenticated()) $this->redirect('/login');
-        $this->transactionModel = new Transaction();
-        $this->categoryModel = new Category();
-        $this->walletModel = new Wallet();
-    }
-    
     public function index() {
-        $transactions = $this->transactionModel->getByUser($_SESSION['user_id']);
+        if (!$this->isAuthenticated()) $this->redirect('/login');
+        $transactionModel = new Transaction();
+        $transactions = $transactionModel->getByUser($_SESSION['user_id']);
         $this->render('transactions/index', ['transactions' => $transactions]);
     }
     
     public function create() {
+        if (!$this->isAuthenticated()) $this->redirect('/login');
         $errors = [];
         $data = $_POST;
+        $categoryModel = new Category();
+        $walletModel = new Wallet();
         
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!validateCsrfToken($_POST['csrf_token'])) die('CSRF failed');
@@ -36,14 +30,15 @@ class TransactionController extends BaseController {
             if (empty($data['date']) || !strtotime($data['date'])) $errors['date'] = 'Valid date required';
             
             if (empty($errors)) {
-                $result = $this->transactionModel->create($data);
+                $transactionModel = new Transaction();
+                $result = $transactionModel->create($data);
                 if ($result) $this->redirect('/transactions');
                 else $errors['general'] = 'Failed to create transaction';
             }
         }
         
-        $categories = $this->categoryModel->getForUser($_SESSION['user_id']);
-        $wallets = $this->walletModel->getByUser($_SESSION['user_id']);
+        $categories = $categoryModel->getForUser($_SESSION['user_id']);
+        $wallets = $walletModel->getByUser($_SESSION['user_id']);
         $this->render('transactions/create', [
             'errors' => $errors,
             'data' => $data,
@@ -53,8 +48,13 @@ class TransactionController extends BaseController {
     }
     
     public function edit($id) {
+        if (!$this->isAuthenticated()) $this->redirect('/login');
         $errors = [];
-        $transaction = $this->transactionModel->getById($id, $_SESSION['user_id']);
+        $transactionModel = new Transaction();
+        $categoryModel = new Category();
+        $walletModel = new Wallet();
+        
+        $transaction = $transactionModel->getById($id, $_SESSION['user_id']);
         if (!$transaction) $this->redirect('/transactions');
         
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -73,14 +73,14 @@ class TransactionController extends BaseController {
             if (empty($data['date']) || !strtotime($data['date'])) $errors['date'] = 'Valid date required';
             
             if (empty($errors)) {
-                $result = $this->transactionModel->update($id, $data, $_SESSION['user_id']);
+                $result = $transactionModel->update($id, $data, $_SESSION['user_id']);
                 if ($result) $this->redirect('/transactions');
                 else $errors['general'] = 'Failed to update transaction';
             }
         }
         
-        $categories = $this->categoryModel->getForUser($_SESSION['user_id']);
-        $wallets = $this->walletModel->getByUser($_SESSION['user_id']);
+        $categories = $categoryModel->getForUser($_SESSION['user_id']);
+        $wallets = $walletModel->getByUser($_SESSION['user_id']);
         $this->render('transactions/edit', [
             'errors' => $errors,
             'transaction' => $transaction,
@@ -90,19 +90,26 @@ class TransactionController extends BaseController {
     }
     
     public function delete($id) {
+        if (!$this->isAuthenticated()) $this->redirect('/login');
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!validateCsrfToken($_POST['csrf_token'])) die('CSRF failed');
-            $this->transactionModel->delete($id, $_SESSION['user_id']);
+            $transactionModel = new Transaction();
+            $transactionModel->delete($id, $_SESSION['user_id']);
         }
         $this->redirect('/transactions');
     }
     
     public function search() {
+        if (!$this->isAuthenticated()) $this->redirect('/login');
+        $transactionModel = new Transaction();
+        $categoryModel = new Category();
+        $walletModel = new Wallet();
+        
         $filters = $_GET;
         $page = max(1, intval($filters['page'] ?? 1));
-        $transactions = $this->transactionModel->search($_SESSION['user_id'], $filters, $page);
-        $categories = $this->categoryModel->getForUser($_SESSION['user_id']);
-        $wallets = $this->walletModel->getByUser($_SESSION['user_id']);
+        $transactions = $transactionModel->search($_SESSION['user_id'], $filters, $page);
+        $categories = $categoryModel->getForUser($_SESSION['user_id']);
+        $wallets = $walletModel->getByUser($_SESSION['user_id']);
         
         $this->render('transactions/search', [
             'transactions' => $transactions,
